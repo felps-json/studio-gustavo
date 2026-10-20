@@ -19,7 +19,7 @@ serve(async (req) => {
     // =================================================================
     // CENA 1: CLIENTE FEZ UM NOVO AGENDAMENTO (AVISAR O ADMIN)
     // =================================================================
-    if (type === 'INSERT') {
+    if (type === 'INSERT' && record.status !== 'blocked') { // Bloqueio de agenda não é pedido de cliente
       const { data: adminData } = await supabase
         .from('profiles')
         .select('push_token')
