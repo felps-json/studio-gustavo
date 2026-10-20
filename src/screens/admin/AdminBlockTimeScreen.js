@@ -11,14 +11,12 @@ import { ptBR } from 'date-fns/locale';
 import { COLORS } from '../../constants/theme';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-
-const OPENING_HOUR = 9;
-const CLOSING_HOUR = 19;
-const INTERVAL = 30;
+import { useBusinessSettings } from '../../hooks/useBusinessSettings';
 
 export default function AdminBlockTimeScreen({ navigation }) {
   const { user } = useAuth();
-  
+  const { opening_hour: OPENING_HOUR, closing_hour: CLOSING_HOUR, slot_interval: INTERVAL } = useBusinessSettings();
+
   // Agora o baseDate pode ser atualizado pelo calendário
   const [baseDate, setBaseDate] = useState(new Date()); 
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -38,7 +36,7 @@ export default function AdminBlockTimeScreen({ navigation }) {
   useEffect(() => {
     fetchDayAvailability(selectedDate);
     setSlotsToBlock([]); // Limpa a seleção ao mudar de dia
-  }, [selectedDate]);
+  }, [selectedDate, INTERVAL]);
 
   const fetchDayAvailability = async (date) => {
     setLoading(true);
@@ -106,7 +104,7 @@ export default function AdminBlockTimeScreen({ navigation }) {
         }
     }
     return slots;
-  }, [selectedDate, busySlots, loading]);
+  }, [selectedDate, busySlots, loading, OPENING_HOUR, CLOSING_HOUR, INTERVAL]);
 
   const toggleSlot = (time) => {
     if (slotsToBlock.includes(time)) {
@@ -169,7 +167,7 @@ export default function AdminBlockTimeScreen({ navigation }) {
             service_names: 'Indisponível',
             date: dateString,
             time: time,
-            duration: 30, 
+            duration: INTERVAL,
             price: 0,
             status: 'blocked', 
             payment_method: 'none'

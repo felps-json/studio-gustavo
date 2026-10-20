@@ -6,7 +6,58 @@
 --   2. Este script APAGA todas as policies atuais de profiles, appointments,
 --      services, products e as do bucket 'produtos', e cria novas.
 --   3. Teste primeiro num projeto de homologação, se possível.
+--   4. Para desfazer: supabase/scripts/rollback_seguranca.sql
+--
+-- CÓDIGOS DE ERRO (usados pelo app em src/constants/errors.js):
+--   GS001 = horário ocupado | GS002 = fora do prazo de cancelamento
+--   GS003 = operação não permitida
 -- =====================================================================
+
+
+-- ---------------------------------------------------------------------
+-- 0. VERIFICAÇÃO PRÉVIA: aborta antes de alterar qualquer coisa se o
+--    esquema real for diferente do que este script espera
+-- ---------------------------------------------------------------------
+
+do $$
+declare v_missing text;
+begin
+  select string_agg(v.t || '.' || v.c, ', ') into v_missing
+  from (values
+    ('profiles', 'id'), ('profiles', 'role'), ('profiles', 'loyalty_points'), ('profiles', 'full_name'),
+    ('appointments', 'id'), ('appointments', 'user_id'), ('appointments', 'client_name'),
+    ('appointments', 'service_names'), ('appointments', 'date'), ('appointments', 'time'),
+    ('appointments', 'duration'), ('appointments', 'status'),
+    ('services', 'title'), ('services', 'points'),
+    ('products', 'id')
+  ) as v(t, c)
+  where not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = v.t and column_name = v.c
+  );
+
+  if v_missing is not null then
+    raise exception 'Esquema diferente do esperado. Colunas ausentes: %', v_missing;
+  end if;
+end $$;
+
+
+-- ---------------------------------------------------------------------
+-- 0.1 CONFIGURAÇÕES DA BARBEARIA (fonte única para app e banco)
+-- ---------------------------------------------------------------------
+
+create table if not exists public.business_settings (
+  id integer primary key default 1 check (id = 1), -- tabela de uma linha só
+  cancellation_min_hours integer not null default 2,
+  opening_hour integer not null default 9,
+  closing_hour integer not null default 19,
+  slot_interval integer not null default 30,
+  work_on_sunday boolean not null default false,
+  work_on_monday boolean not null default true,
+  updated_at timestamptz not null default now()
+);
+
+insert into public.business_settings (id) values (1) on conflict (id) do nothing;
 
 
 -- ---------------------------------------------------------------------
@@ -79,7 +130,7 @@ begin
     if tg_op = 'INSERT' then
       -- Cliente só agenda para si mesmo e sempre como "pendente"
       if new.user_id is distinct from auth.uid() then
-        raise exception 'Agendamento inválido.';
+        raise exception 'Agendamento inválido.' using errcode = 'GS003';
       end if;
       new.status := 'pending';
       select full_name into new.client_name from public.profiles where id = auth.uid();
@@ -88,12 +139,12 @@ begin
       if new.status <> 'cancelled'
          or old.status not in ('pending', 'confirmed')
          or (to_jsonb(new) - 'status' - 'updated_at') <> (to_jsonb(old) - 'status' - 'updated_at') then
-        raise exception 'Alteração não permitida.';
+        raise exception 'Alteração não permitida.' using errcode = 'GS003';
       end if;
 
-      -- Mesma antecedência de CANCELLATION_MIN_HOURS (src/constants/business.js)
-      if (old.date::date + old.time::time) < (now() at time zone 'America/Sao_Paulo') + interval '2 hours' then
-        raise exception 'PRAZO_CANCELAMENTO';
+      if (old.date::date + old.time::time) < (now() at time zone 'America/Sao_Paulo')
+           + make_interval(hours => (select cancellation_min_hours from public.business_settings where id = 1)) then
+        raise exception 'Fora do prazo de cancelamento.' using errcode = 'GS002';
       end if;
 
       return new;
@@ -122,7 +173,7 @@ begin
         and (a.date::date + a.time::time) < v_end
         and v_start < (a.date::date + a.time::time) + make_interval(mins => coalesce(a.duration, 30))
     ) then
-      raise exception 'HORARIO_OCUPADO';
+      raise exception 'Horário ocupado.' using errcode = 'GS001';
     end if;
   end if;
 
@@ -158,12 +209,12 @@ declare
   v_points integer := 0;
 begin
   if not public.is_admin() then
-    raise exception 'Apenas o administrador pode finalizar atendimentos.';
+    raise exception 'Apenas o administrador pode finalizar atendimentos.' using errcode = 'GS003';
   end if;
 
   select * into v_appt from public.appointments where id = p_id for update;
   if not found then
-    raise exception 'Agendamento não encontrado.';
+    raise exception 'Agendamento não encontrado.' using errcode = 'GS003';
   end if;
   if v_appt.status = 'completed' then
     return 0; -- já finalizado: não pontua duas vezes
@@ -221,6 +272,14 @@ alter table public.profiles     enable row level security;
 alter table public.appointments enable row level security;
 alter table public.services     enable row level security;
 alter table public.products     enable row level security;
+alter table public.business_settings enable row level security;
+
+-- BUSINESS_SETTINGS: todos leem; só admin altera
+drop policy if exists business_settings_select on public.business_settings;
+drop policy if exists business_settings_update on public.business_settings;
+create policy business_settings_select on public.business_settings for select to authenticated using (true);
+create policy business_settings_update on public.business_settings for update to authenticated
+  using (public.is_admin()) with check (public.is_admin());
 
 -- PROFILES: cada um vê/edita o seu; admin vê/edita todos
 create policy profiles_select on public.profiles for select to authenticated

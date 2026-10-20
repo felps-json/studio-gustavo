@@ -9,13 +9,15 @@ import { format, parseISO, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import { COLORS } from '../constants/theme';
-import { CANCELLATION_MIN_HOURS } from '../constants/business';
+import { DB_ERRORS } from '../constants/errors';
+import { useBusinessSettings } from '../hooks/useBusinessSettings';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function AppointmentsScreen({ navigation }) {
   const { user } = useAuth();
-  
+  const { cancellation_min_hours: CANCELLATION_MIN_HOURS } = useBusinessSettings();
+
   const [activeTab, setActiveTab] = useState('upcoming'); 
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +90,7 @@ export default function AppointmentsScreen({ navigation }) {
 
               if (error) throw error;
             } catch (error) {
-              Alert.alert("Erro", error?.message?.includes('PRAZO_CANCELAMENTO')
+              Alert.alert("Erro", error?.code === DB_ERRORS.CANCELLATION_DEADLINE
                 ? `Cancelamentos pelo app só são aceitos com ${CANCELLATION_MIN_HOURS}h de antecedência.`
                 : "Não foi possível cancelar.");
               fetchMyAppointments();

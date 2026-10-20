@@ -8,8 +8,16 @@ export const BARBER = {
   photo: null,
 };
 
-// Antecedência mínima (em horas) para o cliente cancelar pelo app.
-export const CANCELLATION_MIN_HOURS = 2;
+// Valores usados enquanto a tabela business_settings não carrega (ou se falhar).
+// A fonte oficial é o banco: altere lá, não aqui.
+export const DEFAULT_SETTINGS = {
+  cancellation_min_hours: 2,
+  opening_hour: 9,
+  closing_hour: 19,
+  slot_interval: 30,
+  work_on_sunday: false,
+  work_on_monday: true,
+};
 
 // Link público da política de privacidade (obrigatório para Apple e Google).
 // Hospede o texto de docs/politica-de-privacidade.md e cole a URL aqui.
