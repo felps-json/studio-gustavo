@@ -15,8 +15,11 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.felps.studiogustavo"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.felps.studiogustavo",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -41,8 +44,8 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/icon.png",
-          "color": "#D4A373"
+          "icon": "./assets/notification-icon.png",
+          "color": "#D16C46"
         }
       ],
       [
