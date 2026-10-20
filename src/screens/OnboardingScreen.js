@@ -46,9 +46,7 @@ export default function OnboardingScreen() {
         phone: phone,
         avatar_url: avatarUrl,
         updated_at: new Date(),
-        // Se for a primeira vez, definimos o role como client
-        role: 'client', 
-        loyalty_points: 0
+        // role e loyalty_points são definidos pelo banco (o app não pode alterá-los)
       };
 
       // 3. UPSERT: Se existir atualiza, se não existir cria.

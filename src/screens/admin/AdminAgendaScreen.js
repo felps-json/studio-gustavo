@@ -61,9 +61,6 @@ export default function AdminAgendaScreen({ navigation }) {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      // Guarda os dados antes de remover da tela
-      const appt = appointments.find(a => a.id === id);
-
       // Atualiza a tela imediatamente (Optimistic UI)
       setAppointments(prev => prev.filter(a => {
           if (a.id === id) {
@@ -73,6 +70,19 @@ export default function AdminAgendaScreen({ navigation }) {
           return true;
       }));
 
+      // --- FINALIZAR: status + pontos de fidelidade numa única operação no banco ---
+      if (newStatus === 'completed') {
+          const { data: earnedPoints, error } = await supabase.rpc('complete_appointment', { p_id: id });
+          if (error) throw error;
+
+          if (earnedPoints > 0) {
+              Alert.alert("Finalizado!", `Corte faturado e o cliente ganhou +${earnedPoints} pontos!`);
+          } else {
+              Alert.alert("Finalizado!", "Corte faturado. (Nenhum ponto configurado para este serviço).");
+          }
+          return;
+      }
+
       // Atualiza no banco de dados
       const { error } = await supabase
         .from('appointments')
@@ -80,58 +90,6 @@ export default function AdminAgendaScreen({ navigation }) {
         .eq('id', id);
 
       if (error) throw error;
-      
-      // --- A MÁGICA DOS PONTOS DE FIDELIDADE (BLINDADA) ---
-      if (newStatus === 'completed' && appt && appt.user_id) {
-          
-          // 1. Pega os pontos atuais do cliente
-          const { data: profileData } = await supabase
-              .from('profiles')
-              .select('loyalty_points')
-              .eq('id', appt.user_id)
-              .single();
-
-          const currentPoints = profileData?.loyalty_points || 0;
-
-          // 2. Limpa os nomes dos serviços agendados para comparação (minúsculo e sem espaços)
-          const serviceNames = appt.service.split('+').map(s => s.trim().toLowerCase());
-          
-          // 3. Busca o catálogo de serviços do banco
-          const { data: servicesData } = await supabase
-              .from('services')
-              .select('title, points');
-
-          let earnedPoints = 0;
-          
-          if (servicesData && servicesData.length > 0) {
-              // 4. Soma os pontos varrendo cada serviço agendado ("Lógica do Caixa de Supermercado")
-              serviceNames.forEach(name => {
-                  const svc = servicesData.find(s => s.title.toLowerCase().trim() === name);
-                  if (svc) {
-                      earnedPoints += (Number(svc.points) || 0);
-                  }
-              });
-          }
-          
-          // 5. Se ganhou pontos, deposita na conta
-          if (earnedPoints > 0) {
-              const { data: updatedProfile, error: updateError } = await supabase
-                  .from('profiles')
-                  .update({ loyalty_points: currentPoints + earnedPoints })
-                  .eq('id', appt.user_id)
-                  .select(); 
-
-              if (updateError) throw updateError;
-              
-              if (!updatedProfile || updatedProfile.length === 0) {
-                  Alert.alert("Atenção", "Corte finalizado, mas o banco bloqueou o envio dos pontos por segurança.");
-              } else {
-                  Alert.alert("Finalizado!", `Corte faturado e o cliente ganhou +${earnedPoints} pontos!`);
-              }
-          } else {
-              Alert.alert("Finalizado!", "Corte faturado. (Nenhum ponto configurado para este serviço).");
-          }
-      }
 
     } catch (error) {
       Alert.alert("Erro", "Falha ao processar a requisição.");

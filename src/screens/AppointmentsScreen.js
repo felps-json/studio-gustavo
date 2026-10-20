@@ -88,7 +88,9 @@ export default function AppointmentsScreen({ navigation }) {
 
               if (error) throw error;
             } catch (error) {
-              Alert.alert("Erro", "Não foi possível cancelar.");
+              Alert.alert("Erro", error?.message?.includes('PRAZO_CANCELAMENTO')
+                ? `Cancelamentos pelo app só são aceitos com ${CANCELLATION_MIN_HOURS}h de antecedência.`
+                : "Não foi possível cancelar.");
               fetchMyAppointments();
             }
           } 

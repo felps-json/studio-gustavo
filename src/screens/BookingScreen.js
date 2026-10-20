@@ -54,13 +54,8 @@ export default function BookingScreen({ route, navigation }) {
       const start = format(startOfMonth(dateRef), 'yyyy-MM-dd');
       const end = format(endOfMonth(addDays(dateRef, 60)), 'yyyy-MM-dd'); 
 
-      // Busca a data, hora e a DURAÇÃO do agendamento
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('date, time, duration')
-        .gte('date', start)
-        .lte('date', end)
-        .not('status', 'in', '(cancelled,declined)'); // Recusados também liberam o horário
+      // Busca só data, hora e duração dos horários ocupados (sem dados dos outros clientes)
+      const { data, error } = await supabase.rpc('get_busy_slots', { p_start: start, p_end: end });
 
       if (error) throw error;
 
@@ -238,7 +233,13 @@ export default function BookingScreen({ route, navigation }) {
             navigation.navigate('Success');
         }
     } catch (error) {
-        Alert.alert("Erro", "Falha ao agendar. Tente novamente.");
+        if (error?.message?.includes('HORARIO_OCUPADO')) {
+            Alert.alert("Horário indisponível", "Esse horário acabou de ser reservado. Escolha outro.");
+            setSelectedSlot(null);
+            fetchMonthAvailability(baseDate);
+        } else {
+            Alert.alert("Erro", "Falha ao agendar. Tente novamente.");
+        }
     }
   };
 
