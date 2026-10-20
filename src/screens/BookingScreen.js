@@ -60,7 +60,7 @@ export default function BookingScreen({ route, navigation }) {
         .select('date, time, duration')
         .gte('date', start)
         .lte('date', end)
-        .neq('status', 'cancelled');
+        .not('status', 'in', '(cancelled,declined)'); // Recusados também liberam o horário
 
       if (error) throw error;
 

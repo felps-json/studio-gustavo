@@ -5,10 +5,11 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import { COLORS } from '../constants/theme';
+import { CANCELLATION_MIN_HOURS } from '../constants/business';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -52,7 +53,22 @@ export default function AppointmentsScreen({ navigation }) {
     fetchMyAppointments();
   };
 
-  const handleCancel = (id) => {
+  // Só permite cancelar pelo app com a antecedência mínima configurada
+  const canCancel = (appt) => {
+    const start = parseISO(`${appt.date}T${appt.time.substring(0, 5)}:00`);
+    return differenceInMinutes(start, new Date()) >= CANCELLATION_MIN_HOURS * 60;
+  };
+
+  const handleCancel = (appt) => {
+    if (!canCancel(appt)) {
+      Alert.alert(
+        "Cancelamento indisponível",
+        `Cancelamentos pelo app só são aceitos com ${CANCELLATION_MIN_HOURS}h de antecedência. Fale diretamente com a barbearia.`
+      );
+      return;
+    }
+
+    const id = appt.id;
     Alert.alert(
       "Cancelar Agendamento",
       "Tem certeza que deseja cancelar este horário? A vaga será liberada.",
@@ -185,9 +201,17 @@ export default function AppointmentsScreen({ navigation }) {
                         </View>
 
                         {activeTab === 'upcoming' ? (
-                            <TouchableOpacity style={styles.cancelBtn} onPress={() => handleCancel(item.id)}>
-                                <Text style={styles.cancelBtnText}>CANCELAR HORÁRIO</Text>
-                            </TouchableOpacity>
+                            canCancel(item) ? (
+                                <TouchableOpacity style={styles.cancelBtn} onPress={() => handleCancel(item)}>
+                                    <Text style={styles.cancelBtnText}>CANCELAR HORÁRIO</Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <View style={styles.cancelBtn}>
+                                    <Text style={styles.cancelInfoText}>
+                                        Cancelamento só com {CANCELLATION_MIN_HOURS}h de antecedência. Fale com a barbearia.
+                                    </Text>
+                                </View>
+                            )
                         ) : null}
                     </View>
                 )
@@ -244,5 +268,6 @@ const styles = StyleSheet.create({
   timeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   timeText: { color: COLORS.textSecondary, fontSize: 14 },
   cancelBtn: { marginTop: 20, paddingTop: 15, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.05)', alignItems: 'center' },
-  cancelBtnText: { color: '#F44336', fontWeight: 'bold', fontSize: 12, letterSpacing: 1 }
+  cancelBtnText: { color: '#F44336', fontWeight: 'bold', fontSize: 12, letterSpacing: 1 },
+  cancelInfoText: { color: COLORS.textSecondary, fontSize: 12, textAlign: 'center' }
 });
