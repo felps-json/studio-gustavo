@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { COLORS } from '../constants/theme';
+import { BARBER } from '../constants/business';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 
@@ -112,7 +113,7 @@ export default function HomeScreen({ navigation }) {
               </View>
               
               <View style={{flexDirection: 'row', alignItems: 'center', gap: 15}}>
-                  <TouchableOpacity onPress={() => navigation.navigate('AdminDashboard')}>
+                  <TouchableOpacity onPress={() => navigation.navigate('Account')}>
                     <Image 
                         source={{ uri: profile?.avatar_url || 'https://via.placeholder.com/150' }} 
                         style={styles.headerAvatar} 
@@ -157,7 +158,7 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.loyaltyFooter}>
                     {currentPoints >= goalPoints 
                         ? "🎉 Parabéns! Você ganhou um corte grátis!" 
-                        : `Faltam ${goalPoints - currentPoints} pontos para o seu prémio.`}
+                        : `Faltam ${goalPoints - currentPoints} pontos para o seu prêmio.`}
                 </Text>
             </View>
         </View>
@@ -200,20 +201,15 @@ export default function HomeScreen({ navigation }) {
         {/* === PERFIL BARBEIRO === */}
         <View style={styles.section}>
           <View style={styles.profileCard}>
-            <Image 
-              source={{ uri: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=400&q=80' }} 
-              style={styles.profileImg} 
+            <Image
+              source={BARBER.photo || require('../../assets/logo.png')}
+              style={styles.profileImg}
+              resizeMode={BARBER.photo ? 'cover' : 'contain'}
             />
             <View style={styles.profileContent}>
               <Text style={styles.profileLabel}>O ESPECIALISTA</Text>
-              <Text style={styles.profileName}>Gustavo Silva</Text>
-              <Text style={styles.profileBio}>
-                Master Barber com 10 anos de experiência. Especialista em visagismo e cortes clássicos.
-              </Text>
-              <View style={styles.ratingRow}>
-                <MaterialIcons name="star" size={16} color={COLORS.primary} />
-                <Text style={styles.ratingText}>5.0 (580 avaliações)</Text>
-              </View>
+              <Text style={styles.profileName}>{BARBER.name}</Text>
+              <Text style={styles.profileBio}>{BARBER.bio}</Text>
             </View>
           </View>
         </View>
@@ -222,7 +218,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Gustavo Store</Text>
-            <TouchableOpacity><Text style={styles.linkText}>Ir para Loja</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Store')}><Text style={styles.linkText}>Ir para Loja</Text></TouchableOpacity>
           </View>
           
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 20, paddingRight: 20 }}>
@@ -232,7 +228,7 @@ export default function HomeScreen({ navigation }) {
                 <Text style={{color: COLORS.textSecondary, fontStyle: 'italic'}}>Novos produtos em breve!</Text>
             ) : (
                 products.map((product) => (
-                  <TouchableOpacity key={product.id} style={styles.productCard}>
+                  <TouchableOpacity key={product.id} style={styles.productCard} onPress={() => navigation.navigate('Store')}>
                     <Image source={{ uri: product.img }} style={styles.productImg} />
                     <View style={styles.productContent}>
                       <Text style={styles.productCategory}>{product.category}</Text>
@@ -316,9 +312,7 @@ const styles = StyleSheet.create({
   profileContent: { flex: 1, padding: 15, justifyContent: 'center' },
   profileLabel: { color: COLORS.primary, fontSize: 10, fontWeight: 'bold', letterSpacing: 1, marginBottom: 4 },
   profileName: { color: COLORS.textLight, fontSize: 18, fontWeight: 'bold', marginBottom: 4 },
-  profileBio: { color: COLORS.textSecondary, fontSize: 11, lineHeight: 16, marginBottom: 8 },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  ratingText: { color: COLORS.textLight, fontSize: 11, fontWeight: 'bold' },
+  profileBio: { color: COLORS.textSecondary, fontSize: 11, lineHeight: 16 },
 
   // CARD PRODUTO
   productCard: { width: 140, backgroundColor: COLORS.surface, borderRadius: 12, marginRight: 15, padding: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },

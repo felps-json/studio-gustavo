@@ -25,13 +25,13 @@
       },
       "package": "com.felps.studiogustavo",
       "googleServicesFile": "./google-services.json",
-      "permissions": [
-        "NOTIFICATIONS",
-        "VIBRATE",
-        "RECEIVE_BOOT_COMPLETED",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "READ_MEDIA_IMAGES"
+      "permissions": [],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -48,7 +48,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "O Studio Gustavo precisa de acesso à galeria para você adicionar fotos aos produtos e perfil."
+          "photosPermission": "O Studio Gustavo precisa de acesso à galeria para você adicionar fotos aos produtos e perfil.",
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ]
     ],

@@ -12,7 +12,9 @@ import HomeScreen from './src/screens/HomeScreen';
 import ServiceSelectionScreen from './src/screens/ServiceSelectionScreen';
 import BookingScreen from './src/screens/BookingScreen';
 import SuccessScreen from './src/screens/SuccessScreen';
-import AppointmentsScreen from './src/screens/AppointmentsScreen'; 
+import AppointmentsScreen from './src/screens/AppointmentsScreen';
+import AccountScreen from './src/screens/AccountScreen';
+import StoreScreen from './src/screens/StoreScreen';
 
 import AdminNavigator from './src/navigation/AdminNavigator';
 import AdminBlockTimeScreen from './src/screens/admin/AdminBlockTimeScreen';
@@ -50,6 +52,8 @@ function RootNavigator() {
           <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
           <Stack.Screen name="Booking" component={BookingScreen} />
           <Stack.Screen name="Appointments" component={AppointmentsScreen} />
+          <Stack.Screen name="Account" component={AccountScreen} />
+          <Stack.Screen name="Store" component={StoreScreen} />
           <Stack.Screen name="Success" component={SuccessScreen} options={{ gestureEnabled: false }} />
           {isAdmin && <Stack.Screen name="AdminBlockTime" component={AdminBlockTimeScreen} />}
         </>
