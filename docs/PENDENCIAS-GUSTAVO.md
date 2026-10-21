@@ -7,6 +7,7 @@ Decisões de **negócio**, **marca** e **jurídico** que foram implementadas com
 ## Publicação nas lojas
 
 - [ ] 🔴 **Conta de desenvolvedor em nome do Studio Gustavo.** A Apple rejeita apps de um negócio publicados por terceiros (regra 4.2.6). É preciso criar a conta Apple Developer (US$ 99/ano) e a Google Play Console (US$ 25, pagamento único) com o CNPJ/CPF da barbearia.
+- [ ] 🔴 **Conta do Supabase (banco de dados) em nome da barbearia.** O projeto antigo foi perdido junto com o acesso à conta. O novo deve ser criado com um e-mail do Studio Gustavo, com quem cuida do app convidado como membro. Também é preciso decidir se vale o plano Pro (US$ 25/mês): ele não pausa por falta de uso e tem backup diário.
 - [ ] 🔴 **Identificador do app.** Hoje é `com.felps.studiogustavo`, com o nome do desenvolvedor. **Depois da primeira publicação ele não pode mais ser trocado.** Sugestão: `br.com.studiogustavo.app`. Qual usar?
 - [ ] 🟡 **Ícone de notificação.** Foi gerado automaticamente a partir do logo (`assets/notification-icon.png`). Em tamanho pequeno o texto não dá para ler. Vale pedir a um designer uma versão só com a tesoura, em branco sobre fundo transparente.
 

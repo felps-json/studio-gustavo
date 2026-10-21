@@ -5,40 +5,63 @@ Siga **na ordem**. As telas novas do app dependem das funções novas do banco, 
 ## 0. Pré-requisitos
 
 - Node.js LTS e `npm ci` rodado na raiz do projeto
-- Acesso de administrador ao projeto no [Supabase](https://supabase.com/dashboard)
+- Conta no [Supabase](https://supabase.com/dashboard) **em nome da barbearia** (e-mail do Studio Gustavo), com quem cuida do app convidado como membro da organização. Assim o acesso não depende de uma pessoa só.
 - Conta no [Expo/EAS](https://expo.dev) com acesso ao projeto
 - `npm run check` passando, ou seja, o app compila e os testes do banco passam
 
-## 1. Conferir o esquema real (somente leitura)
+## 1. Criar o projeto no Supabase
 
-As migrations foram escritas a partir do código do app. O esquema real do banco **ainda não está versionado**.
+1. No painel, crie um projeto novo na região **South America (São Paulo)** e guarde a senha do banco num gerenciador de senhas.
+2. Em **Project Settings → API Keys**, copie a URL do projeto, a chave **anon/publishable** e a chave **service_role**.
+3. Em **Authentication → Sign In / Providers → Email**, decida se o cadastro exige confirmação de e-mail. Se exigir, configure o SMTP: o envio padrão do Supabase tem limite baixo de e-mails por hora.
 
-1. No Supabase, abra o **SQL Editor** e rode `supabase/scripts/inspecionar_esquema.sql`.
-2. Salve o resultado de **todas** as consultas, principalmente a 4, que é o backup das policies atuais.
-3. Compare com `supabase/tests/esquema-presumido.sql`. Se houver diferença de colunas ou tipos, atualize o esquema presumido e rode `npm run test:db` de novo antes de seguir.
+> O plano gratuito **pausa o projeto depois de 7 dias sem uso**. Em uso diário isso não acontece; para garantir, o plano Pro (US$ 25/mês) não pausa e tem backup diário.
 
-> **Melhor ainda:** versionar o esquema real com `npx supabase db pull` (exige Docker). Isso gera a migration base, e os testes passam a usar o esquema de produção.
+## 2. Criar o banco (migrations)
 
-## 2. Backup
-
-No Supabase, vá em **Database → Backups** e confira se existe um backup recente. No plano gratuito não há backup automático: nesse caso, exporte os dados das tabelas pelo Table Editor (CSV).
-
-## 3. Aplicar as migrations
-
-No SQL Editor, rode **em ordem**, um arquivo por vez:
-
-1. `supabase/migrations/20261019000000_seguranca.sql`
-2. `supabase/migrations/20261020000000_exclusao_conta.sql`
-
-Se o esquema for diferente do esperado, o primeiro arquivo para logo no início com `Colunas ausentes: ...`, sem alterar nada.
-
-Com o projeto vinculado à CLI (`npx supabase link`), dá para usar `npx supabase db push` no lugar.
-
-## 4. Publicar as Edge Functions
+O esquema completo está versionado em `supabase/migrations/`. Com a CLI:
 
 ```bash
+npx supabase login            # num terminal normal (abre o navegador)
+npx supabase link --project-ref <ref-do-projeto>
+npx supabase db push
+```
+
+Ou, no **SQL Editor**, rode **em ordem**, um arquivo por vez:
+
+1. `20261018000000_esquema_inicial.sql`: tabelas e bucket de fotos
+2. `20261019000000_seguranca.sql`: RLS, papéis, pontos e conflito de horários
+3. `20261020000000_exclusao_conta.sql`: exclusão de conta com auditoria
+4. `20261021000000_notificacoes_e_lembretes.sql`: notificações e lembretes
+
+Depois, guarde a URL e a chave service_role no **Vault**, para que o banco consiga chamar as Edge Functions (SQL Editor):
+
+```sql
+select vault.create_secret('https://<ref-do-projeto>.supabase.co', 'project_url');
+select vault.create_secret('<chave service_role>', 'service_role_key');
+```
+
+> **Não** crie "Database Webhooks" no painel para `appointments`: a migration 4 já faz isso, e as notificações chegariam em dobro.
+
+## 3. Publicar as Edge Functions
+
+```bash
+npx supabase functions deploy push-notifications
+npx supabase functions deploy cron-reminders
 npx supabase functions deploy delete-account
 ```
+
+Para conferir os lembretes: em **Integrations → Cron**, o job `lembretes-agendamentos` deve aparecer rodando de hora em hora.
+
+## 4. Apontar o app para o projeto novo
+
+1. Em `src/services/supabase.js`, troque `supabaseUrl` e `supabaseAnonKey` pelos valores do passo 1.
+2. Crie a conta do barbeiro pelo próprio app (cadastro normal) e, no SQL Editor, promova-a a admin:
+   ```sql
+   update public.profiles set role = 'admin'
+   where id = (select id from auth.users where email = '<email do Gustavo>');
+   ```
+3. Cadastre os serviços na tela **Gestão** do app.
 
 ## 5. Testar antes de publicar o app
 
@@ -67,6 +90,6 @@ A versão do build sobe automaticamente (`autoIncrement` no `eas.json`). Para os
 
 ## Desfazer (rollback)
 
-1. Rode `supabase/scripts/rollback_seguranca.sql`.
-2. Em seguida, rode o SQL do backup de policies salvo no passo 1. **Sem esse passo, o app fica sem acesso aos dados.**
-3. Volte o app para a versão anterior.
+Num projeto novo, sem clientes, o mais simples é apagar o projeto e começar de novo pelo passo 1.
+
+Com dados reais, faça antes um backup (**Database → Backups** no plano Pro, ou exportação CSV pelo Table Editor). `supabase/scripts/rollback_seguranca.sql` remove as regras das migrations 2 e 3, mas deixa as tabelas **sem nenhuma policy**: o app fica sem acesso aos dados até que novas policies sejam criadas.

@@ -5,6 +5,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Não publicado]
 
 ### Adicionado
+- Esquema completo do banco versionado (`20261018000000_esquema_inicial.sql`), para recriar o projeto do Supabase do zero.
+- Notificações de agendamento e lembretes configurados por migration (gatilhos com `pg_net` e job do `pg_cron`), em vez de ajustes manuais no painel.
+- E-mail do cliente no perfil, copiado do login (usado na tela Clientes do admin).
 - Tela **Minha Conta**, com exclusão de conta (exigida pela Apple e pelo Google Play) e link para a política de privacidade.
 - Tela **Loja** para o cliente.
 - Desbloqueio de horários na tela de bloqueio de agenda.
@@ -34,4 +37,4 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ### Problemas conhecidos
 - O cliente ainda define preço e duração ao agendar. O barbeiro aprova cada pedido, mas o ideal é o banco calcular esses valores.
-- O esquema real do banco ainda não está versionado (veja `docs/DEPLOY.md`, passo 1).
+- Os gatilhos de notificação e o job de lembretes não rodam nos testes locais (o PostgreSQL embutido não tem `pg_net` nem `pg_cron`). Conferir no projeto real (`docs/DEPLOY.md`, passos 3 e 5).
