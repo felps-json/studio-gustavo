@@ -43,7 +43,7 @@ const agendar = (uid, date, time, duration = 30) =>
 
 before(async () => {
   db = new PGlite();
-  await db.exec(readFileSync(new URL('esquema-presumido.sql', dir), 'utf8'));
+  await db.exec(readFileSync(new URL('supabase-simulado.sql', dir), 'utf8'));
   for (const file of readdirSync(migrationsDir).filter((f) => f.endsWith('.sql')).sort()) {
     await db.exec(readFileSync(new URL(file, migrationsDir), 'utf8'));
   }
@@ -82,6 +82,12 @@ test('cliente novo é sempre criado como client com 0 pontos', async () => {
   await as(novo, `insert into profiles (id, full_name, phone, role, loyalty_points) values ($1, 'X', '9', 'admin', 500)`, [novo]);
   const { rows } = await db.query('select role, loyalty_points from profiles where id = $1', [novo]);
   assert.deepEqual(rows[0], { role: 'client', loyalty_points: 0 });
+});
+
+test('e-mail do perfil vem sempre do login, não do app', async () => {
+  await as(CLIENTE1, `update profiles set email = 'falso@x.com' where id = $1`, [CLIENTE1]);
+  const { rows } = await db.query('select email from profiles where id = $1', [CLIENTE1]);
+  assert.equal(rows[0].email, 'c1@teste.com');
 });
 
 test('cliente não vê o perfil de outro cliente', async () => {
@@ -156,6 +162,10 @@ test('o prazo de cancelamento vem da tabela business_settings', async () => {
   await db.query('update business_settings set cancellation_min_hours = 2');
 });
 
+test('banco recusa status desconhecido', async () => {
+  await rejectsWith(db.query(`insert into appointments (user_id, date, time, status) values ($1, $2, '18:00', 'talvez')`, [CLIENTE1, amanha]), '23514');
+});
+
 // --- PONTOS DE FIDELIDADE ----------------------------------------------
 
 test('só o admin finaliza atendimento, e os pontos são somados uma única vez', async () => {
@@ -180,6 +190,11 @@ test('cliente lê serviços mas não altera', async () => {
   assert.equal(rows.length, 2);
   await rejectsWith(as(CLIENTE1, `insert into services (title, price, duration, points) values ('Hack', 1, 1, 1)`), '42501');
   await as(ADMIN, `insert into services (title, price, duration, points) values ('Pigmentação', 40, 30, 5)`);
+});
+
+test('bucket produtos é criado público e só aceita imagens', async () => {
+  const { rows: [b] } = await db.query(`select public, allowed_mime_types from storage.buckets where id = 'produtos'`);
+  assert.deepEqual(b, { public: true, allowed_mime_types: ['image/jpeg', 'image/png'] });
 });
 
 test('só o admin envia fotos para o bucket produtos', async () => {

@@ -6,10 +6,11 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
-const migrations = readdirSync(new URL('../migrations/', import.meta.url))
+const files = readdirSync(new URL('../migrations/', import.meta.url))
   .filter((f) => f.endsWith('.sql'))
-  .sort()
-  .map((f) => read(`../migrations/${f}`));
+  .sort();
+const migrations = files.map((f) => read(`../migrations/${f}`));
+const migration = (name) => read(`../migrations/${files.find((f) => f.includes(name))}`);
 
 const countObjects = async (db) => {
   const { rows: [r] } = await db.query(`
@@ -22,7 +23,7 @@ const countObjects = async (db) => {
 
 test('migrations são desfeitas pelo rollback e podem ser reaplicadas', async () => {
   const db = new PGlite();
-  await db.exec(read('esquema-presumido.sql'));
+  await db.exec(read('supabase-simulado.sql'));
   for (const sql of migrations) await db.exec(sql);
 
   const aplicado = await countObjects(db);
@@ -41,16 +42,17 @@ test('migrations são desfeitas pelo rollback e podem ser reaplicadas', async ()
 
 test('migration aborta sem alterar nada se o esquema real for diferente', async () => {
   const db = new PGlite();
-  await db.exec(read('esquema-presumido.sql'));
+  await db.exec(read('supabase-simulado.sql'));
+  await db.exec(migration('esquema_inicial'));
   await db.exec('alter table public.services rename column points to pontos');
 
-  await assert.rejects(db.exec(migrations[0]), /Colunas ausentes: services.points/);
+  await assert.rejects(db.exec(migration('seguranca')), /Colunas ausentes: services.points/);
   assert.deepEqual(await countObjects(db), { policies: 0, funcoes: 0, tabelas: 0 });
 });
 
 test('script de inspeção do esquema roda sem erro', async () => {
   const db = new PGlite();
-  await db.exec(read('esquema-presumido.sql'));
+  await db.exec(read('supabase-simulado.sql'));
   for (const sql of migrations) await db.exec(sql);
   await db.exec(read('../scripts/inspecionar_esquema.sql'));
 });
