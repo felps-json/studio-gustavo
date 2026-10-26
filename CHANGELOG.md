@@ -16,18 +16,23 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - Registro de auditoria das exclusões de conta (`account_deletions`).
 - Testes automatizados do banco (`npm run test:db`) e CI no GitHub Actions.
 - Scripts de inspeção do esquema e de rollback; guia de deploy.
+- Política de privacidade completa em HTML, pronta para hospedar, e respostas para os formulários de privacidade da App Store e do Google Play.
 
 ### Alterado
 - Pontos de fidelidade calculados no banco, junto com a finalização do atendimento.
 - Horários livres consultados por `get_busy_slots`, sem expor dados de outros clientes.
 - Exclusão de conta feita numa única transação.
 - Build: iPad desativado, versão incrementada automaticamente pelo EAS, ícone de notificação próprio.
+- Ícone de notificação trocado por uma tesoura branca, legível em tamanho pequeno.
+- Sem foto de perfil, o app mostra as iniciais do nome geradas localmente.
 
 ### Corrigido
 - Avatar da Home levava a uma tela inexistente.
 - Agendamentos recusados continuavam ocupando o horário.
 - Dois clientes podiam reservar o mesmo horário.
 - Bloquear um horário disparava a notificação de "Novo agendamento" para o barbeiro.
+- O cadastro enviava o nome do cliente para um site externo (ui-avatars.com) para gerar o avatar.
+- Imagens de avatar vinham de um site que saiu do ar (via.placeholder.com).
 - Cliente conseguia se tornar admin ou alterar os próprios pontos (dependendo das policies existentes).
 - Dependências nativas obrigatórias ausentes (`expo-font`, `react-native-gesture-handler`), que podiam fazer o app fechar sozinho no build de produção.
 

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Image,
+  View, Text, StyleSheet, TouchableOpacity,
   StatusBar, Alert, ActivityIndicator, Linking
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import { COLORS } from '../constants/theme';
+import Avatar from '../components/Avatar';
 import { PRIVACY_POLICY_URL } from '../constants/business';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -70,13 +71,7 @@ export default function AccountScreen({ navigation }) {
 
       <View style={styles.content}>
         <View style={styles.profileBox}>
-          {profile?.avatar_url ? (
-            <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, styles.avatarFallback]}>
-              <MaterialIcons name="person" size={40} color={COLORS.textSecondary} />
-            </View>
-          )}
+          <Avatar uri={profile?.avatar_url} name={profile?.full_name} size={90} style={styles.avatar} />
           <Text style={styles.name}>{profile?.full_name}</Text>
           <Text style={styles.info}>{user?.email}</Text>
           <Text style={styles.info}>{profile?.phone}</Text>
@@ -116,8 +111,7 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#1E1E1E', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#333' },
   content: { padding: 20 },
   profileBox: { alignItems: 'center', marginBottom: 30 },
-  avatar: { width: 90, height: 90, borderRadius: 45, borderWidth: 2, borderColor: COLORS.primary, marginBottom: 15 },
-  avatarFallback: { backgroundColor: COLORS.surface, justifyContent: 'center', alignItems: 'center' },
+  avatar: { borderWidth: 2, borderColor: COLORS.primary, marginBottom: 15 },
   name: { color: COLORS.textLight, fontSize: 20, fontWeight: 'bold', marginBottom: 6 },
   info: { color: COLORS.textSecondary, fontSize: 14, marginTop: 2 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.surface, padding: 16, borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },

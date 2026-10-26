@@ -36,15 +36,11 @@ export default function OnboardingScreen() {
     try {
       console.log("Tentando salvar dados para ID:", user.id);
 
-      // 2. Prepara os dados
-      // Usamos uma API externa para gerar um avatar com as iniciais do nome
-      const avatarUrl = `https://ui-avatars.com/api/?name=${name.replace(' ', '+')}&background=D4A373&color=fff&size=256`;
-
+      // 2. Prepara os dados (sem foto: o app mostra as iniciais do nome)
       const profileData = {
         id: user.id, // OBRIGATÓRIO para o upsert saber quem é
         full_name: name,
         phone: phone,
-        avatar_url: avatarUrl,
         updated_at: new Date(),
         // role e loyalty_points são definidos pelo banco (o app não pode alterá-los)
       };

@@ -50,5 +50,6 @@ docs/               deploy, pendências de negócio e política de privacidade
 
 - [Deploy passo a passo](docs/DEPLOY.md)
 - [Pendências para o Gustavo validar](docs/PENDENCIAS-GUSTAVO.md)
-- [Política de privacidade (rascunho)](docs/politica-de-privacidade.md)
+- [Política de privacidade (rascunho)](docs/politica-de-privacidade.html)
+- [Formulários de privacidade das lojas](docs/PRIVACIDADE-LOJAS.md)
 - [Histórico de mudanças](CHANGELOG.md)

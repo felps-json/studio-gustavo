@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { COLORS } from '../constants/theme';
+import Avatar from '../components/Avatar';
 import { BARBER } from '../constants/business';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
@@ -114,9 +115,10 @@ export default function HomeScreen({ navigation }) {
               
               <View style={{flexDirection: 'row', alignItems: 'center', gap: 15}}>
                   <TouchableOpacity onPress={() => navigation.navigate('Account')}>
-                    <Image 
-                        source={{ uri: profile?.avatar_url || 'https://via.placeholder.com/150' }} 
-                        style={styles.headerAvatar} 
+                    <Avatar
+                        uri={profile?.avatar_url}
+                        name={profile?.full_name}
+                        style={styles.headerAvatar}
                     />
                   </TouchableOpacity>
 

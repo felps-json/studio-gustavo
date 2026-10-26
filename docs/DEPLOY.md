@@ -81,6 +81,17 @@ Gere um build de teste com `eas build --profile preview` e confira:
 
 ## 6. Publicar o app
 
+### Política de privacidade
+
+As duas lojas exigem a política num endereço público. Depois de preencher os campos destacados de `docs/politica-de-privacidade.html`, hospede o arquivo. Duas opções gratuitas:
+
+- **Site da barbearia**, se houver: suba o arquivo como `politica-de-privacidade.html`.
+- **Netlify Drop**: crie uma conta com o e-mail da barbearia em [app.netlify.com/drop](https://app.netlify.com/drop), arraste uma pasta contendo só o arquivo renomeado para `index.html` e, em **Site configuration**, troque o nome do site (por exemplo, `studio-gustavo.netlify.app`).
+
+Depois, coloque a URL em `PRIVACY_POLICY_URL` (`src/constants/business.js`) e preencha os formulários de privacidade das lojas com as respostas de [PRIVACIDADE-LOJAS.md](PRIVACIDADE-LOJAS.md). O Google Play pede também um link para exclusão de conta: use a URL da política com `#exclusao` no final.
+
+### Build e envio
+
 ```bash
 eas build --platform all --profile production
 eas submit --platform all --profile production

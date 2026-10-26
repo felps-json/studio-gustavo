@@ -20,5 +20,5 @@ export const DEFAULT_SETTINGS = {
 };
 
 // Link público da política de privacidade (obrigatório para Apple e Google).
-// Hospede o texto de docs/politica-de-privacidade.md e cole a URL aqui.
+// Hospede docs/politica-de-privacidade.html (docs/DEPLOY.md, passo 6) e cole a URL aqui.
 export const PRIVACY_POLICY_URL = 'https://SEU-SITE/politica-de-privacidade';

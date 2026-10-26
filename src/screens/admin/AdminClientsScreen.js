@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { 
   View, Text, TextInput, FlatList, TouchableOpacity, 
-  StyleSheet, Image, Linking, Alert, ActivityIndicator, RefreshControl 
+  StyleSheet, Linking, Alert, ActivityIndicator, RefreshControl 
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -9,6 +9,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import { COLORS } from '../../constants/theme';
+import Avatar from '../../components/Avatar';
 import { supabase } from '../../services/supabase';
 
 export default function AdminClientsScreen({ navigation }) {
@@ -56,7 +57,7 @@ export default function AdminClientsScreen({ navigation }) {
           name: profile.full_name || 'Cliente Sem Nome',
           phone: profile.phone || '',
           email: profile.email || 'Sem E-mail',
-          avatar: profile.avatar_url || 'https://via.placeholder.com/150',
+          avatar: profile.avatar_url,
           totalVisits: completed.length,
           lastVisit: lastVisitDate,
           upcomingAppt: upcomingDateStr,
@@ -114,7 +115,7 @@ export default function AdminClientsScreen({ navigation }) {
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <Image source={{ uri: item.avatar }} style={styles.avatar} />
+        <Avatar uri={item.avatar} name={item.name} size={50} style={styles.avatar} />
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={styles.name}>{item.name}</Text>
           <Text style={styles.info}><MaterialIcons name="phone" size={12} /> {item.phone || 'Não informado'}</Text>
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
   
   card: { backgroundColor: COLORS.surface, borderRadius: 16, padding: 16, marginBottom: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
   cardHeader: { flexDirection: 'row', alignItems: 'center' },
-  avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#1E1E1E', borderWidth: 1, borderColor: '#333' },
+  avatar: { borderWidth: 1, borderColor: '#333' },
   name: { color: COLORS.textLight, fontSize: 18, fontWeight: 'bold' },
   info: { color: COLORS.textSecondary, fontSize: 12, marginTop: 2 },
   
